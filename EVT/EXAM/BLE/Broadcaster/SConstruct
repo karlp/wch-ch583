@@ -1,0 +1,72 @@
+#!python
+
+import os
+import os.path
+
+env = Environment(
+    ENV=os.environ,
+)
+
+
+env.SetDefault(
+    TOOLCHAIN='riscv-none-embed-',
+    ARCH_FLAGS="-march=rv32imac -mabi=ilp32",
+    BSP_PATH="#../../SRC",
+    BLE_PATH="#.."
+)
+
+env.Replace(
+    CC='${TOOLCHAIN}gcc',
+    CXX='${TOOLCHAIN}g++',
+    AS='${TOOLCHAIN}gcc',
+    LINK='${TOOLCHAIN}gcc',
+    AR='${TOOLCHAIN}ar',
+    OBJCOPY="${TOOLCHAIN}objcopy",
+    SIZE="${TOOLCHAIN}size",
+    STRIP="${TOOLCHAIN}strip",
+
+    LDFILE="Link.ld",
+
+    PROGSUFFIX=".elf",  # Just for tradition
+    CPPPATH=[
+        "${BSP_PATH}/RVMSIS",
+        "${BSP_PATH}/StdPeriphDriver/inc",
+        "${BLE_PATH}/HAL/include",
+        "${BLE_PATH}/LIB",
+        "APP/include",
+        "Profile/include",
+    ],
+    CCFLAGS=Split("-std=gnu99 ${ARCH_FLAGS} -ggdb3 -Os -Wall -Wextra --specs=nano.specs -fno-common -ffunction-sections -fdata-sections"),
+    LINKFLAGS=Split(
+        "-Wl,--warn-common -Wall ${ARCH_FLAGS} -Wl,-T${LDFILE} --specs=nosys.specs --specs=nano.specs -nostartfiles -Wl,--gc-sections"),
+    LIBS=Split("ISP583 ch58xble"),
+    LIBPATH=[
+        "${BLE_PATH}/LIB",
+        "${BSP_PATH}/Ld",
+        "${BSP_PATH}/StdPeriphDriver",
+        ],
+)
+
+def bin_generator(source, target, env, for_signature):
+    return '$OBJCOPY -O binary %s %s' % (source[0], target[0])
+
+
+env.Append(
+    BUILDERS={
+        'Objcopy': Builder(
+            generator=bin_generator,
+            suffix='.bin',
+            src_suffix='.elf'
+        ),
+    },
+)
+
+
+#
+sources = env.Glob("APP/*.c") + env.Glob("Profile/*.c")
+sources += env.Glob("${BLE_PATH}/HAL/*.c")
+sources += env.Glob("${BSP_PATH}/StdPeriphDriver/*.c")
+sources += ["${BSP_PATH}/Startup/startup_CH583.S"]
+
+out = env.Program("lolicats.elf", sources)
+env.Objcopy(out)
