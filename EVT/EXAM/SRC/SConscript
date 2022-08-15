@@ -1,0 +1,59 @@
+#!python
+# Shared stdperiph helper for WCH BSP
+
+import os
+
+env = Environment(
+    ENV = os.environ,
+    BSP_PATH = Dir('.'),
+    #BSP_PATH="#.",
+    #BLE_PATH="#"   BLE SHOULD HAVE IT's OWN SCONSCRIPT?!!!
+    TOOLCHAIN='riscv-none-embed-',
+    ARCH_FLAGS="-march=rv32imac -mabi=ilp32",
+)
+
+env.Replace(
+    CC='${TOOLCHAIN}gcc',
+    CXX='${TOOLCHAIN}g++',
+    AS='${TOOLCHAIN}gcc',
+    LINK='${TOOLCHAIN}gcc',
+    AR='${TOOLCHAIN}ar',
+    OBJCOPY="${TOOLCHAIN}objcopy",
+    SIZE="${TOOLCHAIN}size",
+    STRIP="${TOOLCHAIN}strip",
+
+    LDFILE="Link.ld",
+
+    PROGSUFFIX=".elf",  # Just for tradition
+    CPPPATH=[
+        "${BSP_PATH}/RVMSIS",
+        "${BSP_PATH}/StdPeriphDriver/inc",
+    ],
+
+
+    CCFLAGS=Split("-std=gnu99 ${ARCH_FLAGS} -ggdb3 -Os -Wall -Wextra --specs=nano.specs -fno-common -ffunction-sections -fdata-sections"),
+    LINKFLAGS=Split(
+        "-Wl,--warn-common -Wall ${ARCH_FLAGS} -Wl,-T${LDFILE} --specs=nosys.specs --specs=nano.specs -nostartfiles -Wl,--gc-sections"),
+    LIBS=Split("ISP583"),
+    LIBPATH=[
+        "${BSP_PATH}/Ld",
+        "${BSP_PATH}/StdPeriphDriver",
+        ],
+)
+
+def bin_generator(source, target, env, for_signature):
+    return '$OBJCOPY -O binary %s %s' % (source[0], target[0])
+
+
+env.Append(
+    BUILDERS={
+        'Objcopy': Builder(
+            generator=bin_generator,
+            suffix='.bin',
+            src_suffix='.elf'
+        ),
+    },
+)
+
+
+Return('env')
