@@ -61,9 +61,17 @@ int main(void)
     GPIOB_ModeCfg(GPIO_Pin_All, GPIO_ModeIN_PU);
 #endif
 #ifdef DEBUG
+#if (DEBUG==Debug_UART0)
+    GPIOB_SetBits(bTXD0);
+    GPIOB_ModeCfg(bTXD0, GPIO_ModeOut_PP_5mA);
+    UART0_DefInit();
+#elif (DEBUG==Debug_UART1)
     GPIOA_SetBits(bTXD1);
     GPIOA_ModeCfg(bTXD1, GPIO_ModeOut_PP_5mA);
     UART1_DefInit();
+#else
+#error "DEBUG defined to unhandled value!"
+#endif
 #endif
     PRINT("%s\n", VER_LIB);
     CH58X_BLEInit();
