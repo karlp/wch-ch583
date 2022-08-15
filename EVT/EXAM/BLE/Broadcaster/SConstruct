@@ -36,6 +36,9 @@ env.Replace(
         "APP/include",
         "Profile/include",
     ],
+    CPPDEFINES=[
+        "DEBUG=Debug_UART0",
+    ],
     CCFLAGS=Split("-std=gnu99 ${ARCH_FLAGS} -ggdb3 -Os -Wall -Wextra --specs=nano.specs -fno-common -ffunction-sections -fdata-sections"),
     LINKFLAGS=Split(
         "-Wl,--warn-common -Wall ${ARCH_FLAGS} -Wl,-T${LDFILE} --specs=nosys.specs --specs=nano.specs -nostartfiles -Wl,--gc-sections"),
