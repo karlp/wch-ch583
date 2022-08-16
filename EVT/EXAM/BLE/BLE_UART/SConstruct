@@ -1,0 +1,57 @@
+#!python
+import os.path
+
+env = SConscript("../../SRC/SConscript")
+
+### BLE STUFF
+env.SetDefault(
+    BLE_PATH="#..",
+)
+
+env.Append(
+    CPPPATH=[
+        "${BLE_PATH}/HAL/include",
+        "${BLE_PATH}/LIB",
+    ],
+    LIBS=Split("ch58xble"),
+    LIBPATH=[
+        "${BLE_PATH}/LIB",
+    ],
+)
+### END OF BLE STUFF
+
+
+env.Append(
+    CPPPATH=[
+        "APP/include",
+        "APP/app_drv_fifo",
+        "APP/ble_uart_service",
+        "Profile/include",
+    ],
+    CPPDEFINES=[
+         "DEBUG=Debug_UART1",
+    ],
+    
+)
+
+sources = ["${BSP_PATH}/Startup/startup_CH583.S"]
+sources += env.Glob("${BLE_PATH}/HAL/*.c")
+sources += env.Glob("${BSP_PATH}/StdPeriphDriver/*.c")
+
+for a in ["APP", "APP/app_drv_fifo", "Profile"]:
+    sources += env.Glob(os.path.join(a, "*.c"))
+
+
+ver = {
+        "normal" : "ble_uart_service.c",
+        "16bit" : "ble_uart_service_16bit.c",
+        "same16bit" : "ble_uart_service_same_16bit_char.c",
+        "same" : "ble_uart_service_same_char.c",
+}
+
+for k,v in ver.items():
+    print("attempting variant", k,v)
+    out = env.Program(os.path.basename(Dir('.').srcnode().abspath) + "_" + k, sources + ["APP/ble_uart_service/" + v])
+    env.Objcopy(out)
+#out = env.Program(os.path.basename(Dir('.').srcnode().abspath), sources)
+#env.Objcopy(out)
