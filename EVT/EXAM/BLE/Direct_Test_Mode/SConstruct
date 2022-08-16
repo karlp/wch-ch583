@@ -1,0 +1,40 @@
+#!python
+import os.path
+
+env = SConscript("../../SRC/SConscript")
+
+### BLE STUFF
+env.SetDefault(
+    BLE_PATH="#..",
+)
+
+env.Append(
+    CPPPATH=[
+        "${BLE_PATH}/HAL/include",
+        "${BLE_PATH}/LIB",
+    ],
+    LIBS=Split("ch58xble"),
+    LIBPATH=[
+        "${BLE_PATH}/LIB",
+    ],
+)
+### END OF BLE STUFF
+
+
+env.Append(
+    CPPPATH=[
+        "APP/include",
+        "Profile/include",
+    ],
+    CPPDEFINES=[
+         "DEBUG=Debug_UART1",
+    ],
+)
+
+sources = env.Glob("APP/*.c") + env.Glob("Profile/*.c")
+sources += env.Glob("${BLE_PATH}/HAL/*.c")
+sources += env.Glob("${BSP_PATH}/StdPeriphDriver/*.c")
+sources += ["${BSP_PATH}/Startup/startup_CH583.S"]
+
+out = env.Program(os.path.basename(Dir('.').srcnode().abspath), sources)
+env.Objcopy(out)
