@@ -1,3 +1,9 @@
+# KARL's Patch branch
+This branch is a continually rebased branch, on top of the vendor upstream,
+that just adds SCons support to building the examples from the command line.
+
+There's _nothing_ else here.
+
 # RISC-V Core BLE5.3 MCU, CH583
 
 ### Overview
